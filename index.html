@@ -10,10 +10,10 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="roxygt">
   
-  <!-- Manifest & Icon Links -->
-  <link rel="manifest" href="./manifest.json">
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23ff6600'/><text x='50%' y='55%' font-size='65' font-weight='900' fill='white' dominant-baseline='central' text-anchor='middle' font-family='sans-serif'>R</text></svg>">
-  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23ff6600'/><text x='50%' y='55%' font-size='65' font-weight='900' fill='white' dominant-baseline='central' text-anchor='middle' font-family='sans-serif'>R</text></svg>">
+  <!-- Connected Manifest & Icons -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="https://dummyimage.com/512x512/ff6600/ffffff.png&text=R">
+  <link rel="apple-touch-icon" href="https://dummyimage.com/512x512/ff6600/ffffff.png&text=R">
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
@@ -121,7 +121,7 @@
     const SECRET_PIN = "0840";
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js');
+      navigator.serviceWorker.register('sw.js').catch(() => {});
     }
 
     function openTab(evt, tabName) {
