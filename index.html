@@ -10,41 +10,31 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="roxygt">
   
-  <!-- Connected Manifest & Icons -->
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" type="image/png" href="https://dummyimage.com/512x512/ff6600/ffffff.png&text=R">
-  <link rel="apple-touch-icon" href="https://dummyimage.com/512x512/ff6600/ffffff.png&text=R">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23ff6600'/><text x='50%' y='55%' font-size='65' font-weight='900' fill='white' dominant-baseline='central' text-anchor='middle' font-family='sans-serif'>R</text></svg>">
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     :root { --primary-orange: #ff6600; --primary-blue: #007bf5; --dark-bg: #0d1117; --card-bg: #161b22; --border-color: #30363d; --text-main: #f0f6fc; }
     body { background-color: var(--dark-bg); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
-    
     header { background-color: var(--card-bg); border-bottom: 3px solid var(--primary-orange); padding: 1rem; display: flex; justify-content: space-between; align-items: center; }
-    
     .logo-container { display: flex; align-items: center; gap: 10px; }
     .logo-icon { background-color: var(--primary-orange); color: #ffffff; font-size: 1.5rem; font-weight: 900; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(255, 102, 0, 0.4); }
     .logo-text { font-size: 1.4rem; font-weight: 800; color: var(--primary-orange); }
     .logo-text span { color: var(--primary-blue); }
-    
     .admin-bar { background: #1f293d; padding: 10px 1rem; border-bottom: 1px solid var(--primary-blue); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
     .admin-bar input { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--dark-bg); color: #fff; font-size: 0.85rem; }
     .btn-admin { background: var(--primary-blue); color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
     .btn-save { background: var(--primary-orange); }
-
     nav { display: flex; gap: 8px; overflow-x: auto; padding: 12px 1rem; background: var(--dark-bg); border-bottom: 1px solid var(--border-color); }
     .nav-btn { background: transparent; color: var(--text-main); border: 2px solid var(--primary-blue); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: 600; white-space: nowrap; }
     .nav-btn.active { background-color: var(--primary-orange); border-color: var(--primary-orange); color: #fff; }
-
     main { flex: 1; max-width: 800px; width: 100%; margin: 1rem auto; padding: 0 1rem; }
     .tab-content { display: none; background-color: var(--card-bg); border: 2px solid var(--primary-orange); border-radius: 16px; padding: 1.5rem; }
     .tab-content.active { display: block; }
-
     h2 { color: var(--primary-orange); margin-bottom: 1rem; border-bottom: 2px solid var(--primary-blue); padding-bottom: 0.4rem; }
-    
     .editable { border: 1px dashed transparent; padding: 4px; border-radius: 4px; transition: border 0.2s; }
     body.admin-mode .editable { border-color: var(--primary-orange); background: rgba(255,102,0,0.05); }
-
     .schedule-item { background: var(--dark-bg); border-left: 4px solid var(--primary-blue); padding: 1rem; margin-bottom: 0.8rem; border-radius: 0 10px 10px 0; }
     .btn-action { display: block; background-color: #ff0000; color: white; padding: 12px; text-decoration: none; border-radius: 8px; font-weight: bold; text-align: center; margin-top: 1rem; }
   </style>
@@ -119,10 +109,6 @@
 
   <script>
     const SECRET_PIN = "0840";
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').catch(() => {});
-    }
 
     function openTab(evt, tabName) {
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
