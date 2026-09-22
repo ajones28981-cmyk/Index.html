@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SafeVent - Dreamcore Forest Sanctuary</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Google Fonts - Nunito & Quicksand -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,600&family=Quicksand:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#fff8f1',
+              100: '#feeed3',
+              200: '#fcd3a1',
+              300: '#fbaf6a',
+              400: '#f98332',
+              500: '#f75f0a', // Warm ADHD Comfort Orange
+              600: '#de4304',
+              700: '#b02f08',
+              800: '#8c260f'
+            },
+            dream: {
+              950: '#07050e',
+              900: '#0f0b1a',
+              800: '#17122b',
+              700: '#261c42',
+              600: '#3a2b5e'
+            }
+          },
+          fontFamily: {
+            sans: ['Nunito', 'sans-serif'],
+            display: ['Quicksand', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* Custom Scrollbar & Selection */
+    body {
+      font-family: 'Nunito', sans-serif;
+      background-color: #06040b;
+      color: #f3f4f6;
+      overflow-x: hidden;
+    }
+
+    #forest-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Shiny Glassmorphism */
+    .glass-panel {
+      background: rgba(20, 14, 40, 0.72);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(249, 131, 50, 0.22);
+      box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+    }
+
+    .glass-panel-orange {
+      background: rgba(249, 131, 50, 0.12);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(251, 175, 106, 0.35);
+      box-shadow: 0 10px 30px rgba(249, 131, 50, 0.15), inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+    }
+
+    /* Glossy Light Shine Effect */
+    .shine-effect {
+      position: relative;
+      overflow: hidden;
+    }
+    .shine-effect::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(
+        60deg,
+        transparent 30%,
+        rgba(255, 255, 255, 0.22) 50%,
+        transparent 70%
+      );
+      transform: translateX(-100%) rotate(25deg);
+      transition: transform 0.8s ease;
+    }
+    .shine-effect:hover::after {
+      transform: translateX(100%) rotate(25deg);
+    }
+
+    /* Glowing Pulses */
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 15px rgba(249, 131, 50, 0.3), inset 0 1px 0 rgba(255,255,255,0.2); }
+      50% { box-shadow: 0 0 35px rgba(249, 131, 50, 0.65), inset 0 1px 0 rgba(255,255,255,0.4); }
+    }
+    .pulse-glow {
+      animation: pulseGlow 4s infinite ease-in-out;
+    }
+
+    /* Guided Breathing Animation */
+    @keyframes breatheCircle {
+      0%, 100% { transform: scale(1); opacity: 0.6; }
+      40% { transform: scale(1.6); opacity: 0.95; }
+      70% { transform: scale(1.6); opacity: 0.95; }
+    }
+    .breathe-anim {
+      animation: breatheCircle 12s infinite ease-in-out;
+    }
+
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #06040b; }
+    ::-webkit-scrollbar-thumb { background: #3a2b5e; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #f98332; }
+
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col relative selection:bg-brand-500 selection:text-white">
+
+  <!-- Dynamic Interactive Forest Canvas -->
+  <canvas id="forest-canvas"></canvas>
+
+  <!-- Global Floating Toast Notification Container -->
+  <div id="toast-container" class="fixed top-20 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
+
+  <!-- Main App Wrapper -->
+  <div class="relative z-10 flex flex-col min-h-screen">
+
+    <!-- Header / Navbar -->
+    <header class="sticky top-0 z-40 glass-panel border-b border-brand-500/20 px-4 py-3 sm:px-6">
+      <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+        
+        <!-- Brand Logo -->
+        <div class="flex items-center space-x-3 cursor-pointer group" onclick="navigateTo('home')">
+          <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-600 via-brand-500 to-amber-400 flex items-center justify-center shadow-lg pulse-glow text-white text-xl transform group-hover:rotate-6 transition-transform">
+            <i class="fa-solid fa-tree"></i>
+          </div>
+          <div>
+            <h1 class="font-display font-extrabold text-2xl text-white tracking-wide flex items-center gap-2">
+              SafeVent 
+              <span class="text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-brand-500/20 text-brand-300 font-bold border border-brand-500/40">
+                Dreamcore Forest
+              </span>
+            </h1>
+            <p class="text-xs text-brand-200/90 font-medium">Warm, ADHD-friendly calm & non-judgmental space</p>
+          </div>
+        </div>
+
+        <!-- Emergency Crisis Button -->
+        <button id="btn-open-helpline" class="shine-effect px-4 py-2 rounded-2xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-200 text-xs sm:text-sm font-bold flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95 shadow-lg">
+          <i class="fa-solid fa-phone-volume text-red-400 animate-pulse"></i>
+          <span>Help & Crisis Lines</span>
+        </button>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="max-w-6xl mx-auto mt-3 pt-2 border-t border-purple-900/30 flex items-center justify-start sm:justify-center overflow-x-auto gap-2 text-sm no-scrollbar pb-1">
+        <button type="button" id="nav-home" onclick="navigateTo('home')" class="nav-btn shine-effect px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all whitespace-nowrap bg-brand-500 text-white shadow-lg shadow-brand-500/30">
+          <i class="fa-solid fa-house"></i> Home
+        </button>
+        <button type="button" id="nav-vent" onclick="navigateTo('vent')" class="nav-btn shine-effect px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all whitespace-nowrap text-gray-300 hover:text-white hover:bg-brand-500/15">
+          <i class="fa-solid fa-comment-dots text-brand-400"></i> Let It Out
+        </button>
+        <button type="button" id="nav-music" onclick="navigateTo('music')" class="nav-btn shine-effect px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all whitespace-nowrap text-gray-300 hover:text-white hover:bg-brand-500/15">
+          <i class="fa-solid fa-compact-disc text-purple-400"></i> Soundscapes
+        </button>
+        <button type="button" id="nav-youtube" onclick="navigateTo('youtube')" class="nav-btn shine-effect px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all whitespace-nowrap text-gray-300 hover:text-white hover:bg-brand-500/15">
+          <i class="fa-brands fa-youtube text-red-400"></i> YouTube
+        </button>
+        <button type="button" id="nav-admin" onclick="navigateTo('admin')" class="nav-btn shine-effect px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all whitespace-nowrap text-gray-300 hover:text-white hover:bg-brand-500/15">
+          <i class="fa-solid fa-key text-amber-400"></i> Owner Portal
+        </button>
+      </nav>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-5xl w-full mx-auto p-4 sm:p-6 my-2 relative z-10">
+
+      <!-- ==================== HOME PAGE ==================== -->
+      <section id="page-home" class="page-view space-y-6">
+        
+        <!-- Hero Shiny Banner -->
+        <div class="glass-panel-orange rounded-3xl p-6 sm:p-10 border border-brand-500/40 text-center relative overflow-hidden shine-effect">
+          <div class="absolute -right-16 -bottom-16 w-64 h-64 bg-brand-500/25 rounded-full blur-3xl pointer-events-none"></div>
+          <div class="absolute -left-16 -top-16 w-64 h-64 bg-purple-500/25 rounded-full blur-3xl pointer-events-none"></div>
+          
+          <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/40 text-xs sm:text-sm font-bold mb-4 shadow-sm">
+            <i class="fa-solid fa-sparkles text-amber-300 animate-spin" style="animation-duration: 8s;"></i> Welcome to SafeVent
+          </div>
+          
+          <h2 class="font-display font-black text-3xl sm:text-5xl text-white mb-4 leading-tight tracking-tight">
+            A Shiny, Safe Space For Your Mind
+          </h2>
+          
+          <p class="text-gray-200 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed mb-8 font-medium">
+            Immerse yourself in a dreamcore forest designed with calming orange tones for ADHD relief. Unburden your worries, listen to ambient audio tracks, or visit our support channel.
+          </p>
+
+          <div class="flex flex-wrap items-center justify-center gap-4">
+            <button onclick="navigateTo('vent')" class="shine-effect px-8 py-3.5 rounded-2xl bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-400 hover:to-brand-500 text-white font-extrabold text-lg shadow-xl shadow-brand-500/30 transform hover:-translate-y-1 transition-all flex items-center gap-3">
+              <i class="fa-solid fa-heart-circle-check text-xl"></i> Let It Out
+            </button>
+            <button onclick="navigateTo('music')" class="shine-effect px-8 py-3.5 rounded-2xl glass-panel hover:bg-brand-500/20 text-brand-200 border border-brand-400/50 font-bold text-lg transform hover:-translate-y-1 transition-all flex items-center gap-3">
+              <i class="fa-solid fa-headphones text-xl"></i> Listen To Soundscapes
+            </button>
+          </div>
+        </div>
+
+        <!-- Guided Breathing & Mood Grounding Widget -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          <!-- 4-7-8 Breathing Circle -->
+          <div class="glass-panel rounded-3xl p-6 border border-brand-500/30 flex flex-col items-center text-center justify-between space-y-4">
+            <div class="flex items-center gap-2 text-brand-300 font-bold text-sm">
+              <i class="fa-solid fa-wind text-brand-400"></i> 4-7-8 ADHD Grounding Breathe
+            </div>
+
+            <div class="relative w-36 h-36 flex items-center justify-center my-2">
+              <div class="absolute inset-0 rounded-full bg-brand-500/20 border border-brand-500/40 breathe-anim"></div>
+              <div class="w-24 h-24 rounded-full bg-gradient-to-tr from-brand-600 to-amber-500 flex items-center justify-center text-white text-2xl font-black shadow-lg pulse-glow">
+                <i class="fa-solid fa-spa"></i>
+              </div>
+            </div>
+
+            <p id="breathe-instruction-text" class="text-xs sm:text-sm text-gray-300 italic font-medium">
+              Inhale deeply... hold... release slowly.
+            </p>
+          </div>
+
+          <!-- Instant Mood Check-in -->
+          <div class="glass-panel rounded-3xl p-6 border border-purple-500/30 flex flex-col justify-between space-y-4">
+            <div>
+              <h3 class="font-display font-bold text-xl text-white flex items-center gap-2 mb-1">
+                <i class="fa-solid fa-face-smile text-amber-400"></i> How are you feeling right now?
+              </h3>
+              <p class="text-xs text-gray-300">Tap your mood to receive an instant warm prompt.</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="setMoodPrompt('overwhelmed')" class="shine-effect px-3 py-2.5 rounded-xl bg-dream-950/80 hover:bg-brand-500/20 border border-brand-500/30 text-xs font-bold text-brand-200 transition-all text-left flex items-center gap-2">
+                <i class="fa-solid fa-cloud-bolt text-brand-400"></i> Overwhelmed
+              </button>
+              <button onclick="setMoodPrompt('anxious')" class="shine-effect px-3 py-2.5 rounded-xl bg-dream-950/80 hover:bg-purple-500/20 border border-purple-500/30 text-xs font-bold text-purple-200 transition-all text-left flex items-center gap-2">
+                <i class="fa-solid fa-heart-crack text-purple-400"></i> Anxious
+              </button>
+              <button onclick="setMoodPrompt('seeking')" class="shine-effect px-3 py-2.5 rounded-xl bg-dream-950/80 hover:bg-amber-500/20 border border-amber-500/30 text-xs font-bold text-amber-200 transition-all text-left flex items-center gap-2">
+                <i class="fa-solid fa-sun text-amber-400"></i> Seeking Calm
+              </button>
+              <button onclick="setMoodPrompt('focus')" class="shine-effect px-3 py-2.5 rounded-xl bg-dream-950/80 hover:bg-emerald-500/20 border border-emerald-500/30 text-xs font-bold text-emerald-200 transition-all text-left flex items-center gap-2">
+                <i class="fa-solid fa-brain text-emerald-400"></i> Need Focus
+              </button>
+            </div>
+
+            <div id="mood-response-box" class="p-3 rounded-2xl bg-dream-950 border border-brand-500/20 text-xs text-brand-200 leading-relaxed font-medium">
+              ✨ Pick how you feel above to get a comforting grounding note!
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Custom Announcement Card -->
+        <div class="glass-panel-orange rounded-3xl p-6 border border-brand-500/40 relative">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="p-3 rounded-2xl bg-brand-500/20 text-brand-300 text-xl border border-brand-500/30">
+              <i class="fa-solid fa-bullhorn"></i>
+            </div>
+            <div>
+              <h3 class="font-display font-bold text-xl text-white">Owner Notice & Updates</h3>
+              <p class="text-xs text-brand-200">Community news and details</p>
+            </div>
+          </div>
+          <div id="home-announcement-content" class="text-gray-200 leading-relaxed bg-dream-950/80 p-4 rounded-2xl border border-brand-500/20 text-sm sm:text-base font-medium">
+            <!-- Dynamically Loaded -->
+          </div>
+        </div>
+
+        <!-- Quick Navigation Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div onclick="navigateTo('vent')" class="glass-panel hover:border-brand-500/70 rounded-3xl p-6 cursor-pointer transition-all transform hover:-translate-y-1 group shine-effect">
+            <div class="w-12 h-12 rounded-2xl bg-brand-500/20 text-brand-400 flex items-center justify-center text-2xl mb-4 group-hover:bg-brand-500 group-hover:text-white transition-all shadow-md">
+              <i class="fa-solid fa-feather"></i>
+            </div>
+            <h4 class="font-bold text-xl text-white mb-2">Vent Your Mind</h4>
+            <p class="text-sm text-gray-300 leading-relaxed">Type out thoughts, overthinking, or problems in total privacy whenever you feel overwhelmed.</p>
+          </div>
+
+          <div onclick="navigateTo('music')" class="glass-panel hover:border-purple-500/70 rounded-3xl p-6 cursor-pointer transition-all transform hover:-translate-y-1 group shine-effect">
+            <div class="w-12 h-12 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-2xl mb-4 group-hover:bg-purple-500 group-hover:text-white transition-all shadow-md">
+              <i class="fa-solid fa-music"></i>
+            </div>
+            <h4 class="font-bold text-xl text-white mb-2">6 Ambient Tracks</h4>
+            <p class="text-sm text-gray-300 leading-relaxed">Select soothing Web Audio synthesizer tracks to ground your focus and reduce anxiety.</p>
+          </div>
+
+          <div onclick="navigateTo('youtube')" class="glass-panel hover:border-red-500/70 rounded-3xl p-6 cursor-pointer transition-all transform hover:-translate-y-1 group shine-effect">
+            <div class="w-12 h-12 rounded-2xl bg-red-500/20 text-red-400 flex items-center justify-center text-2xl mb-4 group-hover:bg-red-500 group-hover:text-white transition-all shadow-md">
+              <i class="fa-brands fa-youtube"></i>
+            </div>
+            <h4 class="font-bold text-xl text-white mb-2">Support Channel</h4>
+            <p class="text-sm text-gray-300 leading-relaxed">Check out our dedicated YouTube channel with videos created to help and inspire you.</p>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ==================== LET IT OUT (VENT) PAGE ==================== -->
+      <section id="page-vent" class="page-view hidden space-y-6">
+        <div class="glass-panel rounded-3xl p-6 sm:p-8 border border-brand-500/30">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-12 h-12 rounded-2xl bg-brand-500/20 text-brand-400 flex items-center justify-center text-2xl border border-brand-500/30">
+              <i class="fa-solid fa-comment-dots"></i>
+            </div>
+            <div>
+              <h2 class="font-display font-extrabold text-2xl sm:text-3xl text-white">Let It Out</h2>
+              <p class="text-sm text-gray-300">Express your thoughts, anxieties, or daily problems freely.</p>
+            </div>
+          </div>
+
+          <div class="bg-dream-950/90 p-4 rounded-2xl border border-brand-500/30 mb-6 text-sm text-brand-200 flex items-start gap-3">
+            <i class="fa-solid fa-shield-heart text-brand-400 mt-1 text-lg"></i>
+            <p class="leading-relaxed">
+              Your message is safely saved so the channel owner can read it later and provide tailored updates. You can write anonymously or use a nickname.
+            </p>
+          </div>
+
+          <form id="vent-form" class="space-y-4">
+            <div>
+              <label class="block text-sm font-bold text-gray-200 mb-1.5">Your Name or Alias (Optional)</label>
+              <input type="text" id="vent-author" placeholder="e.g. Alex, Friend, Anonymous..." class="w-full px-4 py-3 rounded-2xl bg-dream-950 border border-brand-500/30 text-white placeholder-gray-500 focus:outline-none focus:border-brand-400 transition-all font-medium">
+            </div>
+
+            <!-- Vent Topic Tags -->
+            <div>
+              <label class="block text-xs font-bold text-gray-300 mb-1.5">Vent Topic (Optional)</label>
+              <div class="flex flex-wrap gap-2" id="vent-tag-selectors">
+                <button type="button" onclick="toggleVentTag(this, 'Overthinking')" class="tag-btn text-xs px-3 py-1.5 rounded-xl border border-gray-700 bg-dream-950 text-gray-300 font-semibold hover:border-brand-500 transition-all">#Overthinking</button>
+                <button type="button" onclick="toggleVentTag(this, 'School/Work')" class="tag-btn text-xs px-3 py-1.5 rounded-xl border border-gray-700 bg-dream-950 text-gray-300 font-semibold hover:border-brand-500 transition-all">#School/Work</button>
+                <button type="button" onclick="toggleVentTag(this, 'Anxiety')" class="tag-btn text-xs px-3 py-1.5 rounded-xl border border-gray-700 bg-dream-950 text-gray-300 font-semibold hover:border-brand-500 transition-all">#Anxiety</button>
+                <button type="button" onclick="toggleVentTag(this, 'Relationships')" class="tag-btn text-xs px-3 py-1.5 rounded-xl border border-gray-700 bg-dream-950 text-gray-300 font-semibold hover:border-brand-500 transition-all">#Relationships</button>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="block text-sm font-bold text-gray-200">What's on your mind today? *</label>
+                <span id="vent-char-count" class="text-xs text-gray-400 font-mono">0 chars</span>
+              </div>
+              <textarea id="vent-content" rows="6" required placeholder="Type whatever is bothering you... take all the time and space you need." class="w-full px-4 py-3 rounded-2xl bg-dream-950 border border-brand-500/30 text-white placeholder-gray-500 focus:outline-none focus:border-brand-400 transition-all resize-y font-medium leading-relaxed"></textarea>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+              <button type="button" id="btn-clear-vent" class="shine-effect px-5 py-2.5 rounded-xl border border-gray-700 hover:bg-gray-800 text-gray-300 font-bold text-sm transition-all">
+                <i class="fa-solid fa-eraser mr-1"></i> Clear Text
+              </button>
+
+              <button type="submit" class="shine-effect px-8 py-3.5 rounded-2xl bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-400 hover:to-brand-500 text-white font-extrabold text-base shadow-lg shadow-brand-500/30 transform hover:scale-105 active:scale-95 transition-all flex items-center gap-2">
+                <i class="fa-solid fa-paper-plane"></i> Submit Vent
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- ==================== MUSIC SOUNDSCAPES PAGE ==================== -->
+      <section id="page-music" class="page-view hidden space-y-6">
+        <div class="glass-panel rounded-3xl p-6 sm:p-8 border border-purple-500/30">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-12 h-12 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-2xl border border-purple-500/30">
+              <i class="fa-solid fa-headphones"></i>
+            </div>
+            <div>
+              <h2 class="font-display font-extrabold text-2xl sm:text-3xl text-white">Forest Audio Soundscapes</h2>
+              <p class="text-sm text-gray-300">Synthesized audio streams for grounding and calming ADHD minds</p>
+            </div>
+          </div>
+
+          <!-- Main Player Display -->
+          <div class="bg-dream-950/90 rounded-3xl p-6 border border-purple-500/30 flex flex-col items-center text-center space-y-4">
+            
+            <!-- Animated Sound Visualizer -->
+            <canvas id="visualizer-canvas" class="w-full h-24 rounded-2xl bg-dream-900/80 border border-purple-500/30 shadow-inner"></canvas>
+
+            <div>
+              <h3 id="current-track-title" class="font-extrabold text-2xl text-white">1. Dreamcore Synth Pad</h3>
+              <p id="current-track-desc" class="text-xs sm:text-sm text-purple-300 mt-1 font-medium">Warm ambient chords with deep grounding sub bass harmonics</p>
+            </div>
+
+            <!-- Player Controls -->
+            <div class="w-full max-w-md space-y-4 pt-2">
+              <div class="flex items-center justify-center gap-4">
+                <button id="play-pause-btn" class="shine-effect w-16 h-16 rounded-full bg-brand-500 hover:bg-brand-400 text-white text-2xl flex items-center justify-center shadow-xl shadow-brand-500/40 transform hover:scale-110 active:scale-95 transition-all pulse-glow">
+                  <i id="play-pause-icon" class="fa-solid fa-play ml-1"></i>
+                </button>
+              </div>
+
+              <!-- Volume Slider -->
+              <div class="flex items-center gap-3 px-4">
+                <i class="fa-solid fa-volume-low text-gray-400 text-sm"></i>
+                <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.5" class="w-full accent-brand-500 cursor-pointer bg-purple-950 rounded-lg h-2">
+                <i class="fa-solid fa-volume-high text-gray-400 text-sm"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- 6 Selectable Tracks List -->
+          <div class="space-y-3 pt-4">
+            <h3 class="font-bold text-lg text-white flex items-center gap-2">
+              <i class="fa-solid fa-list-music text-brand-400"></i> Select Atmosphere
+            </h3>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              
+              <button onclick="selectTrack('synth')" id="track-btn-synth" class="track-btn shine-effect glass-panel border-brand-500/70 p-4 rounded-2xl flex items-center gap-3 text-left transition-all">
+                <div class="p-3 rounded-xl bg-brand-500/20 text-brand-300 flex-shrink-0 border border-brand-500/30">
+                  <i class="fa-solid fa-wave-square text-xl"></i>
+                </div>
+                <div>
+                  <h4 class="font-bold text-white text-sm">1. Dreamcore Synth Pad</h4>
+                  <p class="text-xs text-gray-300">Warm ambient chords & sub bass</p>
+                </div>
+              </button>
+
+              <button onclick="selectTrack('rain')" id="track-btn-rain" class="track-btn shine-effect glass-panel border-gray-800 p-4 rounded-2xl flex items-center gap-3 text-left transition-all">
+                <div class="p-3 rounded-xl bg-blue-500/20 text-blue-300 flex-shrink-0 border border-blue-500/30">
+                  <i class="fa-solid fa-cloud-showers-heavy text-xl"></i>
+                </div>
+                <div>
+                  <h4 class="font-bold text-white text-sm">2. Deep Forest Rain</h4>
+                  <p class="text-xs text-gray-300">Gentle white noise rainfall & wind</p>
+                </div>
+              </button>
+
+              <button onclick="selectTrack('chimes')" id="track-btn-chimes" class="track-btn shine-effect glass-panel border-gray-800 p-4 rounded-2xl flex items-center gap-3 text-left transition-all">
+                <div class="p-3 rounded-xl bg-amber-500/20 text-amber-300 flex-shrink-0 border border-amber-500/30">
+                  <i class="fa-solid fa-bell text-xl"></i>
+                </div>
+                <div>
+                  <h4 class="font-bold text-white text-sm">3. Gentle Wind Chimes</h4>
+                  <p class="text-xs text-gray-300">Random harmonic metallic chime tones</p>
+                </div>
+              </button>
+
+              <button onclick="selectTrack('pulse')" id="track-btn-pulse" class="track-btn shine-effect glass-panel border-gray-800 p-4 rounded-2xl flex items-center gap-3 text-left transition-all">
+                <div class="p-3 rounded-xl bg-purple-500/20 text-purple-300 flex-shrink-0 border border-purple-500/30">
+                  <i class="fa-solid fa-brain text-xl"></i>
+                </div>
+                <div>
+                  <h4 class="font-bold text-white text-sm">4. Soft Lo-Fi Pulse</h4>
+                  <p class="text-xs text-gray-300">Rhythmic binaural focus pulse</p>
+                </div>
+              </button>
+
+              <button onclick="selectTrack('night')" id="track-btn-night" class="track-btn shine-effect glass-panel border-gray-800 p-4 rounded-2xl flex items-center gap-3 text-left transition-all">
+                <div class="p-3 rounded-xl bg-emerald-500/20 text-emerald-300 flex-shrink-0 border border-emerald-500/30">
+                  <i class="fa-solid fa-moon text-xl"></i>
+                </div>
+                <div>
+                  <h4 class="font-bold text-white text-sm">5. Night Forest Atmosphere</h4>
+                  <p class="text-xs text-gray-300">Crickets, soft breeze & deep drone</p>
+                </div>
+              </button>
+
+              <button onclick="selectTrack('cosmic')" id="track-btn-cosmic" class="track-btn shine-effect glass-panel border-gray-800 p-4 rounded-2xl flex items-center gap-3 text-left transition-all">
+                <div class="p-3 rounded-xl bg-indigo-500/20 text-indigo-300 flex-shrink-0 border border-indigo-500/30">
+                  <i class="fa-solid fa-atom text-xl"></i>
+                </div>
+                <div>
+                  <h4 class="font-bold text-white text-sm">6. Cosmic Ambient Drift</h4>
+                  <p class="text-xs text-gray-300">Deep spatial resonance for relaxation</p>
+                </div>
+              </button>
+
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== YOUTUBE SUPPORT PAGE ==================== -->
+      <section id="page-youtube" class="page-view hidden space-y-6">
+        <div class="glass-panel rounded-3xl p-6 sm:p-8 border border-red-500/30">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-2xl bg-red-500/20 text-red-400 flex items-center justify-center text-2xl border border-red-500/30">
+                <i class="fa-brands fa-youtube"></i>
+              </div>
+              <div>
+                <h2 class="font-display font-extrabold text-2xl sm:text-3xl text-white">Our YouTube Support Channel</h2>
+                <p class="text-sm text-gray-300">Helping minds through video content & community support</p>
+              </div>
+            </div>
+
+            <a href="https://m.youtube.com/channel/UCDalR-zufO7R2AWyA3LPzIA" target="_blank" rel="noopener noreferrer" class="shine-effect px-6 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-sm shadow-lg shadow-red-600/30 flex items-center gap-2 transition-all transform hover:scale-105">
+              <i class="fa-brands fa-youtube"></i> Open Channel
+            </a>
+          </div>
+
+          <div class="bg-dream-950/90 rounded-3xl p-6 sm:p-8 border border-red-500/20 text-center space-y-6">
+            <div class="max-w-xl mx-auto space-y-4">
+              <div class="w-20 h-20 rounded-full bg-gradient-to-tr from-red-600 to-amber-500 flex items-center justify-center text-white text-4xl mx-auto shadow-xl pulse-glow">
+                <i class="fa-solid fa-heart"></i>
+              </div>
+              
+              <h3 class="font-extrabold text-2xl text-white">Join Our YouTube Family</h3>
+              <p class="text-sm sm:text-base text-gray-300 leading-relaxed font-medium">
+                We create videos aimed at providing comfort, understanding ADHD, sharing relaxing atmospheres, and letting you know you are never alone.
+              </p>
+
+              <div class="pt-2">
+                <p class="text-xs text-brand-300 font-bold mb-2">Direct Channel Link:</p>
+                <div class="p-3.5 rounded-2xl bg-dream-900 border border-brand-500/30 text-xs sm:text-sm text-gray-200 font-mono select-all break-all">
+                  https://m.youtube.com/channel/UCDalR-zufO7R2AWyA3LPzIA
+                </div>
+              </div>
+
+              <div class="pt-2 flex justify-center">
+                <a href="https://m.youtube.com/channel/UCDalR-zufO7R2AWyA3LPzIA" target="_blank" rel="noopener noreferrer" class="shine-effect px-8 py-3.5 rounded-2xl bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-extrabold text-lg shadow-xl flex items-center gap-2 transition-all transform hover:scale-105">
+                  <i class="fa-solid fa-user-plus"></i> Visit & Subscribe
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== ADMIN PORTAL PAGE ==================== -->
+      <section id="page-admin" class="page-view hidden space-y-6">
+        
+        <!-- Passcode Entry Card -->
+        <div id="admin-pin-card" class="glass-panel rounded-3xl p-6 sm:p-8 border border-amber-500/40 max-w-md mx-auto text-center space-y-5">
+          <div class="w-16 h-16 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-3xl mx-auto border border-amber-500/30">
+            <i class="fa-solid fa-user-shield"></i>
+          </div>
+          <div>
+            <h2 class="font-display font-extrabold text-2xl text-white">Owner Access</h2>
+            <p class="text-sm text-gray-300 mt-1">Enter your secret owner passcode to view vents and update home page notices.</p>
+          </div>
+
+          <form id="pin-form" class="space-y-4">
+            <div>
+              <input type="password" id="pin-input" maxlength="8" placeholder="Enter Passcode" class="w-full text-center text-2xl tracking-widest font-bold px-4 py-3 rounded-2xl bg-dream-950 border border-amber-500/40 text-white placeholder-gray-600 focus:outline-none focus:border-amber-400">
+            </div>
+            <p id="pin-error-msg" class="text-xs text-red-400 hidden font-bold"><i class="fa-solid fa-triangle-exclamation"></i> Incorrect passcode. Please try again.</p>
+            
+            <button type="submit" class="shine-effect w-full py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-dream-950 font-extrabold text-base shadow-lg transition-all">
+              Unlock Dashboard
+            </button>
+          </form>
+        </div>
+
+        <!-- Unlocked Owner Dashboard -->
+        <div id="admin-dashboard" class="hidden space-y-6">
+          
+          <div class="glass-panel rounded-3xl p-6 border border-amber-500/40 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl">
+                <i class="fa-solid fa-user-check"></i>
+              </div>
+              <div>
+                <h2 class="font-display font-extrabold text-2xl text-white">Owner Support Dashboard</h2>
+                <p class="text-xs text-emerald-400 font-bold"><i class="fa-solid fa-circle text-[8px] mr-1"></i> Authenticated Session</p>
+              </div>
+            </div>
+            <button id="btn-lock-admin" class="shine-effect px-4 py-2 rounded-xl border border-amber-500/40 text-amber-300 hover:bg-amber-500/20 text-sm font-bold flex items-center gap-2">
+              <i class="fa-solid fa-lock"></i> Lock Portal
+            </button>
+          </div>
+
+          <!-- Edit Main Page Announcement -->
+          <div class="glass-panel rounded-3xl p-6 border border-brand-500/30 space-y-4">
+            <h3 class="font-bold text-xl text-white flex items-center gap-2">
+              <i class="fa-solid fa-pen-to-square text-brand-400"></i> Update Main Page Notice
+            </h3>
+            <p class="text-xs text-gray-300">Type details or supportive messages here to display on the Home Page.</p>
+            
+            <textarea id="admin-announcement-input" rows="4" class="w-full p-4 rounded-2xl bg-dream-950 border border-brand-500/30 text-white placeholder-gray-500 focus:outline-none focus:border-brand-400 text-sm font-medium"></textarea>
+            
+            <div class="flex justify-end">
+              <button id="btn-save-announcement" class="shine-effect px-6 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-400 text-white font-bold text-sm shadow-md transition-all flex items-center gap-2">
+                <i class="fa-solid fa-floppy-disk"></i> Publish to Home Page
+              </button>
+            </div>
+          </div>
+
+          <!-- Submitted User Vents List -->
+          <div class="glass-panel rounded-3xl p-6 border border-purple-500/30 space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="font-bold text-xl text-white flex items-center gap-2">
+                <i class="fa-solid fa-inbox text-purple-400"></i> User Submitted Vents
+              </h3>
+              <button id="btn-clear-all-vents" class="text-xs text-red-400 hover:underline font-bold">Clear All Entries</button>
+            </div>
+
+            <div id="admin-vents-list" class="space-y-3">
+              <!-- Dynamically rendered via JS -->
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- Helpline & Crisis Support Modal -->
+    <div id="help-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+      <div class="glass-panel max-w-lg w-full rounded-3xl p-6 border border-red-500/50 space-y-5 shadow-2xl relative">
+        
+        <button id="btn-close-helpline" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-dream-950 text-gray-400 hover:text-white flex items-center justify-center border border-gray-700">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-2xl bg-red-500/20 text-red-400 flex items-center justify-center text-2xl border border-red-500/30">
+            <i class="fa-solid fa-hand-holding-heart"></i>
+          </div>
+          <div>
+            <h3 class="font-display font-extrabold text-2xl text-white">24/7 Helpline & Crisis Support</h3>
+            <p class="text-xs text-gray-300">You are not alone — reach out anytime</p>
+          </div>
+        </div>
+
+        <div class="space-y-3 text-sm">
+          <div class="p-4 rounded-2xl bg-dream-950 border border-red-500/30 flex items-center justify-between gap-3">
+            <div>
+              <div class="font-bold text-white text-base">988 Lifeline</div>
+              <p class="text-xs text-gray-300">Free, confidential 24/7 mental health crisis support</p>
+            </div>
+            <a href="tel:988" class="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-xs flex items-center gap-1 shadow-md">
+              <i class="fa-solid fa-phone"></i> Call 988
+            </a>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-dream-950 border border-brand-500/30 flex items-center justify-between gap-3">
+            <div>
+              <div class="font-bold text-white text-base">Helpline / 9qq</div>
+              <p class="text-xs text-gray-300">Quick access support hotline</p>
+            </div>
+            <a href="tel:9qq" class="px-4 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs flex items-center gap-1 shadow-md">
+              <i class="fa-solid fa-phone"></i> Dial 9qq
+            </a>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-dream-950 border border-blue-500/30 flex items-center justify-between gap-3">
+            <div>
+              <div class="font-bold text-white text-base">Crisis Text Line</div>
+              <p class="text-xs text-gray-300">Text HOME to 741741 for free support</p>
+            </div>
+            <a href="sms:741741?body=HOME" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1 shadow-md">
+              <i class="fa-solid fa-comment-sms"></i> Text 741741
+            </a>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-dream-950 border border-gray-700 flex items-center justify-between gap-3">
+            <div>
+              <div class="font-bold text-white text-base">Emergency Services</div>
+              <p class="text-xs text-gray-300">Immediate emergency situation</p>
+            </div>
+            <a href="tel:911" class="px-4 py-2 rounded-xl bg-gray-700 hover:bg-gray-600 text-white font-bold text-xs flex items-center gap-1">
+              <i class="fa-solid fa-shield-halved"></i> Call 911
+            </a>
+          </div>
+        </div>
+
+        <button id="btn-modal-done" class="w-full py-3 rounded-xl border border-gray-700 hover:bg-gray-800 text-gray-300 font-bold text-sm">
+          Close Window
+        </button>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="glass-panel border-t border-brand-500/20 py-4 px-4 text-center text-xs text-gray-400 mt-auto">
+      <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+        <p>© SafeVent — Dreamcore Forest & ADHD Sanctuary.</p>
+        <p class="text-brand-300 font-semibold">
+          YouTube: <a href="https://m.youtube.com/channel/UCDalR-zufO7R2AWyA3LPzIA" target="_blank" class="hover:underline">Visit Support Channel</a>
+        </p>
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    // --- SAFE STORAGE HELPERS ---
+    function safeGetItem(key, defaultValue) {
+      try {
+        var val = localStorage.getItem(key);
+        return val !== null ? val : defaultValue;
+      } catch(e) {
+        return defaultValue;
+      }
+    }
+
+    function safeSetItem(key, value) {
+      try {
+        localStorage.setItem(key, value);
+      } catch(e) {
+        console.warn("Storage restricted:", e);
+      }
+    }
+
+    // --- APP STATE & INITIALIZATION ---
+    var SECRET_PIN = "0840";
+    var DEFAULT_ANNOUNCEMENT = "Welcome to SafeVent! This website is built to give you a calm, warm, and gentle space whenever you need to vent or listen to grounding soundscapes. Check out our YouTube channel for videos made to help you through overthinking or hard times!";
+    
+    var announcements = safeGetItem('safevent_announcement', DEFAULT_ANNOUNCEMENT);
+    var ventEntries = [];
+    try {
+      ventEntries = JSON.parse(safeGetItem('safevent_vents', '[]'));
+    } catch(e) {
+      ventEntries = [];
+    }
+
+    // --- TOAST NOTIFICATIONS ---
+    function showToast(message, type) {
+      type = type || 'brand';
+      var container = document.getElementById('toast-container');
+      if (!container) return;
+
+      var toast = document.createElement('div');
+      var colorClasses = 'border-brand-500/50 bg-brand-950/90 text-brand-200';
+      if (type === 'success') colorClasses = 'border-emerald-500/50 bg-emerald-950/90 text-emerald-200';
+      if (type === 'error') colorClasses = 'border-red-500/50 bg-red-950/90 text-red-200';
+
+      toast.className = 'glass-panel p-4 rounded-2xl border text-xs sm:text-sm font-bold shadow-xl transition-all transform translate-x-10 opacity-0 pointer-events-auto flex items-center justify-between gap-3 ' + colorClasses;
+      toast.innerHTML = '<span>' + message + '</span><i class="fa-solid fa-xmark cursor-pointer opacity-70 hover:opacity-100" onclick="this.parentElement.remove()"></i>';
+
+      container.appendChild(toast);
+
+      setTimeout(function() {
+        toast.classList.remove('translate-x-10', 'opacity-0');
+      }, 50);
+
+      setTimeout(function() {
+        if (toast.parentElement) {
+          toast.classList.add('translate-x-10', 'opacity-0');
+          setTimeout(function() { if (toast.parentElement) toast.remove(); }, 300);
+        }
+      }, 4000);
+    }
+
+    // --- GLOBAL NAVIGATION LOGIC ---
+    window.navigateTo = function(pageId) {
+      var pages = document.querySelectorAll('.page-view');
+      for (var i = 0; i < pages.length; i++) {
+        pages[i].classList.add('hidden');
+      }
+      
+      var target = document.getElementById('page-' + pageId);
+      if (target) {
+        target.classList.remove('hidden');
+      }
+
+      var navBtns = document.querySelectorAll('.nav-btn');
+      for (var j = 0; j < navBtns.length; j++) {
+        navBtns[j].classList.remove('bg-brand-500', 'text-white', 'shadow-lg', 'shadow-brand-500/30');
+        navBtns[j].classList.add('text-gray-300', 'hover:text-white', 'hover:bg-brand-500/15');
+      }
+
+      var activeNavBtn = document.getElementById('nav-' + pageId);
+      if (activeNavBtn) {
+        activeNavBtn.classList.remove('text-gray-300', 'hover:text-white', 'hover:bg-brand-500/15');
+        activeNavBtn.classList.add('bg-brand-500', 'text-white', 'shadow-lg', 'shadow-brand-500/30');
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // --- UTILITY FOR HTML ESCAPING ---
+    function escapeHTML(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // --- RENDER ANNOUNCEMENT ---
+    function renderHomeAnnouncement() {
+      var container = document.getElementById('home-announcement-content');
+      if (container) {
+        container.textContent = announcements;
+      }
+    }
+
+    // --- MOOD CHECK-IN PROMPTS ---
+    window.setMoodPrompt = function(mood) {
+      var box = document.getElementById('mood-response-box');
+      if (!box) return;
+
+      var prompts = {
+        overwhelmed: "🧡 Take a slow breath. You don't have to solve everything right now. Let's just focus on this single moment.",
+        anxious: "💜 Put your hand on your heart and feel your pulse. You are safe here in this forest, and everything will be okay.",
+        seeking: "✨ You are right where you belong. Relax your shoulders, unclamp your jaw, and let the ambient sound play.",
+        focus: "🧠 One small task at a time. Put on track 4 (Soft Lo-Fi Pulse) to help steady your mind!"
+      };
+
+      box.innerHTML = prompts[mood] || "✨ Stay gentle with yourself today!";
+    };
+
+    // --- HELPLINE MODAL ---
+    function openHelpModal() { document.getElementById('help-modal').classList.remove('hidden'); }
+    function closeHelpModal() { document.getElementById('help-modal').classList.add('hidden'); }
+
+    // --- VENT TAG SELECTION ---
+    var selectedVentTag = "";
+    window.toggleVentTag = function(btn, tag) {
+      var btns = document.querySelectorAll('#vent-tag-selectors button');
+      btns.forEach(function(b) {
+        b.classList.remove('border-brand-500', 'bg-brand-500/20', 'text-white');
+        b.classList.add('border-gray-700', 'bg-dream-950', 'text-gray-300');
+      });
+
+      if (selectedVentTag === tag) {
+        selectedVentTag = "";
+      } else {
+        selectedVentTag = tag;
+        btn.classList.remove('border-gray-700', 'bg-dream-950', 'text-gray-300');
+        btn.classList.add('border-brand-500', 'bg-brand-500/20', 'text-white');
+      }
+    };
+
+    // --- VENT SUBMISSION ---
+    function handleVentSubmit(e) {
+      e.preventDefault();
+      var authorInput = document.getElementById('vent-author');
+      var contentInput = document.getElementById('vent-content');
+
+      var author = authorInput.value.trim() || 'Anonymous Friend';
+      var content = contentInput.value.trim();
+
+      if (!content) return;
+
+      if (selectedVentTag) {
+        author += " [" + selectedVentTag + "]";
+      }
+
+      var newEntry = {
+        id: Date.now(),
+        author: author,
+        content: content,
+        date: new Date().toLocaleString()
+      };
+
+      ventEntries.unshift(newEntry);
+      safeSetItem('safevent_vents', JSON.stringify(ventEntries));
+
+      contentInput.value = '';
+      authorInput.value = '';
+      document.getElementById('vent-char-count').textContent = '0 chars';
+      
+      showToast('🧡 Your vent has been saved safely. Take a deep breath!', 'success');
+      renderAdminVents();
+    }
+
+    // --- ADMIN / OWNER PORTAL LOGIC ---
+    function verifyAdminPin(e) {
+      e.preventDefault();
+      var pinInput = document.getElementById('pin-input');
+      var errorMsg = document.getElementById('pin-error-msg');
+
+      if (pinInput && pinInput.value === SECRET_PIN) {
+        document.getElementById('admin-pin-card').classList.add('hidden');
+        document.getElementById('admin-dashboard').classList.remove('hidden');
+        if (errorMsg) errorMsg.classList.add('hidden');
+        pinInput.value = '';
+
+        document.getElementById('admin-announcement-input').value = announcements;
+        renderAdminVents();
+        showToast('🔓 Portal Unlocked!', 'success');
+      } else if (errorMsg) {
+        errorMsg.classList.remove('hidden');
+      }
+    }
+
+    function lockAdminPortal() {
+      document.getElementById('admin-pin-card').classList.remove('hidden');
+      document.getElementById('admin-dashboard').classList.add('hidden');
+      showToast('🔒 Portal Locked', 'brand');
+    }
+
+    function saveAnnouncement() {
+      var input = document.getElementById('admin-announcement-input');
+      announcements = (input && input.value.trim()) ? input.value.trim() : DEFAULT_ANNOUNCEMENT;
+      safeSetItem('safevent_announcement', announcements);
+      renderHomeAnnouncement();
+      showToast('✨ Notice published to Home Page!', 'success');
+    }
+
+    function renderAdminVents() {
+      var container = document.getElementById('admin-vents-list');
+      if (!container) return;
+
+      if (ventEntries.length === 0) {
+        container.innerHTML = '<div class="text-center py-8 text-gray-400 text-sm font-medium"><i class="fa-solid fa-inbox text-2xl mb-2 text-gray-600 block"></i>No vents submitted yet. Messages will appear here.</div>';
+        return;
+      }
+
+      var html = '';
+      for (var i = 0; i < ventEntries.length; i++) {
+        var vent = ventEntries[i];
+        html += '<div class="p-4 rounded-2xl bg-dream-950 border border-purple-500/30 space-y-2">' +
+                  '<div class="flex items-center justify-between text-xs text-brand-300 font-bold">' +
+                    '<span><i class="fa-solid fa-user text-brand-400 mr-1"></i> ' + escapeHTML(vent.author) + '</span>' +
+                    '<span class="text-gray-500">' + escapeHTML(vent.date) + '</span>' +
+                  '</div>' +
+                  '<p class="text-sm text-gray-200 leading-relaxed whitespace-pre-wrap font-medium">' + escapeHTML(vent.content) + '</p>' +
+                  '<div class="flex justify-end pt-1">' +
+                    '<button onclick="deleteVent(' + vent.id + ')" class="text-xs text-red-400 hover:text-red-300 font-bold flex items-center gap-1">' +
+                      '<i class="fa-solid fa-trash"></i> Delete' +
+                    '</button>' +
+                  '</div>' +
+                '</div>';
+      }
+      container.innerHTML = html;
+    }
+
+    window.deleteVent = function(id) {
+      ventEntries = ventEntries.filter(function(v) { return v.id !== id; });
+      safeSetItem('safevent_vents', JSON.stringify(ventEntries));
+      renderAdminVents();
+      showToast('Deleted entry', 'brand');
+    };
+
+    function clearAllVents() {
+      if (ventEntries.length === 0) return;
+      ventEntries = [];
+      safeSetItem('safevent_vents', JSON.stringify(ventEntries));
+      renderAdminVents();
+      showToast('Cleared all submitted vents', 'brand');
+    }
+
+    // --- WEB AUDIO SYNTHESIZER SOUNDSCAPES ---
+    var audioCtx = null;
+    var isPlaying = false;
+    var masterGain = null;
+    var currentTrack = 'synth';
+    var synthNodes = [];
+
+    var TRACK_INFO = {
+      synth: { title: "1. Dreamcore Synth Pad", desc: "Warm ambient chords with deep grounding sub bass harmonics" },
+      rain: { title: "2. Deep Forest Rain", desc: "Gentle white noise rainfall & calming night wind" },
+      chimes: { title: "3. Gentle Wind Chimes", desc: "Random soft harmonic metallic chime tones" },
+      pulse: { title: "4. Soft Lo-Fi Pulse", desc: "Rhythmic binaural focus pulses to ease overthinking" },
+      night: { title: "5. Night Forest Atmosphere", desc: "Soft crickets ambient chirp and warm deep drone" },
+      cosmic: { title: "6. Cosmic Ambient Drift", desc: "Resonant spatial ambient waves for relaxation" }
+    };
+
+    function initAudioContext() {
+      if (!audioCtx) {
+        var AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioCtxClass();
+        masterGain = audioCtx.createGain();
+        var slider = document.getElementById('volume-slider');
+        masterGain.gain.value = slider ? parseFloat(slider.value) : 0.5;
+        masterGain.connect(audioCtx.destination);
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function stopCurrentAudio() {
+      synthNodes.forEach(function(node) {
+        try {
+          if (node.stop) node.stop();
+          if (node.disconnect) node.disconnect();
+        } catch(e) {}
+      });
+      synthNodes = [];
+    }
+
+    function startCurrentTrack() {
+      initAudioContext();
+      stopCurrentAudio();
+
+      if (currentTrack === 'synth') {
+        var freqs = [174.61, 220.00, 261.63, 329.63, 87.31];
+        freqs.forEach(function(f) {
+          var osc = audioCtx.createOscillator();
+          var gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(f, audioCtx.currentTime);
+          gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+
+          var lfo = audioCtx.createOscillator();
+          var lfoGain = audioCtx.createGain();
+          lfo.frequency.value = 0.15;
+          lfoGain.gain.value = 0.02;
+          lfo.connect(gain.gain);
+          lfo.start();
+
+          osc.connect(gain);
+          gain.connect(masterGain);
+          osc.start();
+
+          synthNodes.push(osc, gain, lfo, lfoGain);
+        });
+      } else if (currentTrack === 'rain') {
+        var bufferSize = audioCtx.sampleRate * 2;
+        var noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        var output = noiseBuffer.getChannelData(0);
+        for (var i = 0; i < bufferSize; i++) {
+          output[i] = Math.random() * 2 - 1;
+        }
+
+        var whiteNoise = audioCtx.createBufferSource();
+        whiteNoise.buffer = noiseBuffer;
+        whiteNoise.loop = true;
+
+        var filter = audioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 800;
+
+        var gain = audioCtx.createGain();
+        gain.gain.value = 0.18;
+
+        whiteNoise.connect(filter);
+        filter.connect(gain);
+        gain.connect(masterGain);
+        whiteNoise.start();
+
+        synthNodes.push(whiteNoise, filter, gain);
+      } else if (currentTrack === 'chimes') {
+        var baseOsc = audioCtx.createOscillator();
+        var baseGain = audioCtx.createGain();
+        baseOsc.type = 'triangle';
+        baseOsc.frequency.value = 110;
+        baseGain.gain.value = 0.05;
+        baseOsc.connect(baseGain);
+        baseGain.connect(masterGain);
+        baseOsc.start();
+        synthNodes.push(baseOsc, baseGain);
+
+        var interval = setInterval(function() {
+          if (!isPlaying || currentTrack !== 'chimes') {
+            clearInterval(interval);
+            return;
+          }
+          var chimeFreqs = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+          var freq = chimeFreqs[Math.floor(Math.random() * chimeFreqs.length)];
+          var osc = audioCtx.createOscillator();
+          var chimeGain = audioCtx.createGain();
+
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+          
+          chimeGain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+          chimeGain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 3.0);
+
+          osc.connect(chimeGain);
+          chimeGain.connect(masterGain);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 3.1);
+        }, 1200);
+      } else if (currentTrack === 'pulse') {
+        [180, 184].forEach(function(f) {
+          var osc = audioCtx.createOscillator();
+          var gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.value = f;
+          gain.gain.value = 0.1;
+
+          osc.connect(gain);
+          gain.connect(masterGain);
+          osc.start();
+          synthNodes.push(osc, gain);
+        });
+      } else if (currentTrack === 'night') {
+        var osc = audioCtx.createOscillator();
+        var gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.value = 65.41;
+        
+        var filter = audioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 220;
+
+        gain.gain.value = 0.07;
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(masterGain);
+        osc.start();
+        synthNodes.push(osc, filter, gain);
+      } else if (currentTrack === 'cosmic') {
+        [130.81, 196.00, 293.66].forEach(function(f) {
+          var osc = audioCtx.createOscillator();
+          var gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.value = f;
+          gain.gain.value = 0.06;
+
+          osc.connect(gain);
+          gain.connect(masterGain);
+          osc.start();
+          synthNodes.push(osc, gain);
+        });
+      }
+    }
+
+    function toggleAudio() {
+      if (isPlaying) {
+        stopCurrentAudio();
+        isPlaying = false;
+        document.getElementById('play-pause-icon').className = 'fa-solid fa-play ml-1';
+        showToast('Audio paused', 'brand');
+      } else {
+        isPlaying = true;
+        startCurrentTrack();
+        document.getElementById('play-pause-icon').className = 'fa-solid fa-pause';
+        showToast('Playing soundscape 🎵', 'success');
+      }
+    }
+
+    window.selectTrack = function(trackKey) {
+      if (!TRACK_INFO[trackKey]) return;
+      currentTrack = trackKey;
+
+      document.getElementById('current-track-title').textContent = TRACK_INFO[trackKey].title;
+      document.getElementById('current-track-desc').textContent = TRACK_INFO[trackKey].desc;
+
+      var trackBtns = document.querySelectorAll('.track-btn');
+      for (var i = 0; i < trackBtns.length; i++) {
+        trackBtns[i].classList.remove('border-brand-500/70');
+        trackBtns[i].classList.add('border-gray-800');
+      }
+
+      var activeBtn = document.getElementById('track-btn-' + trackKey);
+      if (activeBtn) {
+        activeBtn.classList.remove('border-gray-800');
+        activeBtn.classList.add('border-brand-500/70');
+      }
+
+      if (isPlaying) {
+        startCurrentTrack();
+      }
+    };
+
+    function updateVolume(val) {
+      if (masterGain) {
+        masterGain.gain.setValueAtTime(parseFloat(val), audioCtx ? audioCtx.currentTime : 0);
+      }
+    }
+
+    // --- VISUALIZER CANVAS ANIMATION ---
+    function drawRoundedRect(ctx, x, y, width, height, radius) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function initVisualizer() {
+      var vCanvas = document.getElementById('visualizer-canvas');
+      if (!vCanvas) return;
+      var vCtx = vCanvas.getContext('2d');
+
+      function drawVisualizer() {
+        if (!vCanvas || vCanvas.offsetWidth === 0 || vCanvas.offsetHeight === 0) {
+          requestAnimationFrame(drawVisualizer);
+          return;
+        }
+
+        vCanvas.width = vCanvas.offsetWidth;
+        vCanvas.height = vCanvas.offsetHeight;
+        vCtx.clearRect(0, 0, vCanvas.width, vCanvas.height);
+
+        var bars = 32;
+        var barWidth = (vCanvas.width / bars) - 3;
+        var time = Date.now() * 0.003;
+
+        for (var i = 0; i < bars; i++) {
+          var height = 8;
+          if (isPlaying) {
+            height = Math.sin(time + i * 0.3) * 25 + Math.cos(time * 0.8 + i) * 20 + 32;
+          }
+
+          var x = i * (barWidth + 3) + 2;
+          var y = vCanvas.height - height;
+
+          var grad = vCtx.createLinearGradient(0, vCanvas.height, 0, 0);
+          grad.addColorStop(0, '#f75f0a');
+          grad.addColorStop(0.6, '#a855f7');
+          grad.addColorStop(1, '#fb923c');
+
+          vCtx.fillStyle = grad;
+          drawRoundedRect(vCtx, x, y, Math.max(1, barWidth), height, 4);
+
+          // Glowing peak cap
+          if (isPlaying) {
+            vCtx.fillStyle = '#ffffff';
+            vCtx.fillRect(x, Math.max(0, y - 3), barWidth, 2);
+          }
+        }
+
+        requestAnimationFrame(drawVisualizer);
+      }
+
+      drawVisualizer();
+    }
+
+    // --- DREAMCORE FOREST CANVAS BACKGROUND ---
+    function initForestCanvas() {
+      var fCanvas = document.getElementById('forest-canvas');
+      if (!fCanvas) return;
+      var fCtx = fCanvas.getContext('2d');
+
+      var width = fCanvas.width = window.innerWidth;
+      var height = fCanvas.height = window.innerHeight;
+
+      var mouse = { x: width / 2, y: height / 2 };
+
+      window.addEventListener('mousemove', function(e) {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+      });
+
+      window.addEventListener('resize', function() {
+        width = fCanvas.width = window.innerWidth;
+        height = fCanvas.height = window.innerHeight;
+      });
+
+      var fireflies = [];
+      var count = 50;
+
+      for (var i = 0; i < count; i++) {
+        fireflies.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          radius: Math.random() * 3.5 + 1,
+          alpha: Math.random() * 0.7 + 0.2,
+          speedX: (Math.random() - 0.5) * 0.5,
+          speedY: (Math.random() - 0.5) * 0.5,
+          color: Math.random() > 0.25 ? '249, 131, 50' : '168, 85, 247'
+        });
+      }
+
+      function drawForestSilhouettes() {
+        fCtx.fillStyle = '#06040b';
+        fCtx.fillRect(0, 0, width, height);
+
+        // Soft ambient radial glow
+        var radGrad = fCtx.createRadialGradient(width/2, height*0.7, 50, width/2, height*0.7, width*0.7);
+        radGrad.addColorStop(0, 'rgba(249, 131, 50, 0.15)');
+        radGrad.addColorStop(0.5, 'rgba(38, 28, 66, 0.2)');
+        radGrad.addColorStop(1, 'rgba(6, 4, 11, 0)');
+        fCtx.fillStyle = radGrad;
+        fCtx.fillRect(0, 0, width, height);
+
+        // Mouse Bioluminescent Aura
+        var mouseGrad = fCtx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 180);
+        mouseGrad.addColorStop(0, 'rgba(249, 131, 50, 0.08)');
+        mouseGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        fCtx.fillStyle = mouseGrad;
+        fCtx.fillRect(0, 0, width, height);
+
+        // Forest Silhouettes
+        fCtx.fillStyle = 'rgba(12, 9, 24, 0.88)';
+        var treeWidth = 60;
+        for (var x = -20; x < width + 40; x += 45) {
+          fCtx.beginPath();
+          fCtx.moveTo(x, height);
+          fCtx.lineTo(x + treeWidth / 2, height - 130 - Math.sin(x) * 35);
+          fCtx.lineTo(x + treeWidth, height);
+          fCtx.fill();
+        }
+
+        fCtx.fillStyle = '#030206';
+        for (var x2 = -10; x2 < width + 40; x2 += 70) {
+          fCtx.beginPath();
+          fCtx.moveTo(x2, height);
+          fCtx.lineTo(x2 + 40, height - 85 - Math.cos(x2) * 25);
+          fCtx.lineTo(x2 + 80, height);
+          fCtx.fill();
+        }
+      }
+
+      function animateForest() {
+        drawForestSilhouettes();
+
+        fireflies.forEach(function(f) {
+          f.x += f.speedX;
+          f.y += f.speedY;
+
+          if (f.x < 0 || f.x > width) f.speedX *= -1;
+          if (f.y < 0 || f.y > height) f.speedY *= -1;
+
+          f.alpha += (Math.random() - 0.5) * 0.02;
+          if (f.alpha < 0.2) f.alpha = 0.2;
+          if (f.alpha > 0.85) f.alpha = 0.85;
+
+          fCtx.beginPath();
+          fCtx.arc(f.x, f.y, f.radius, 0, Math.PI * 2);
+          fCtx.fillStyle = 'rgba(' + f.color + ', ' + f.alpha + ')';
+          fCtx.shadowBlur = 14;
+          fCtx.shadowColor = 'rgba(' + f.color + ', 0.9)';
+          fCtx.fill();
+          fCtx.shadowBlur = 0;
+        });
+
+        requestAnimationFrame(animateForest);
+      }
+
+      animateForest();
+    }
+
+    // --- DOM EVENT LISTENERS ---
+    document.addEventListener('DOMContentLoaded', function() {
+      renderHomeAnnouncement();
+      initForestCanvas();
+      initVisualizer();
+
+      document.getElementById('nav-home').addEventListener('click', function() { navigateTo('home'); });
+      document.getElementById('nav-vent').addEventListener('click', function() { navigateTo('vent'); });
+      document.getElementById('nav-music').addEventListener('click', function() { navigateTo('music'); });
+      document.getElementById('nav-youtube').addEventListener('click', function() { navigateTo('youtube'); });
+      document.getElementById('nav-admin').addEventListener('click', function() { navigateTo('admin'); });
+
+      document.getElementById('vent-form').addEventListener('submit', handleVentSubmit);
+      document.getElementById('btn-clear-vent').addEventListener('click', function() {
+        document.getElementById('vent-author').value = '';
+        document.getElementById('vent-content').value = '';
+        document.getElementById('vent-char-count').textContent = '0 chars';
+      });
+
+      var ventTextarea = document.getElementById('vent-content');
+      if (ventTextarea) {
+        ventTextarea.addEventListener('input', function(e) {
+          document.getElementById('vent-char-count').textContent = e.target.value.length + ' chars';
+        });
+      }
+
+      document.getElementById('play-pause-btn').addEventListener('click', toggleAudio);
+      document.getElementById('volume-slider').addEventListener('input', function(e) { updateVolume(e.target.value); });
+
+      document.getElementById('pin-form').addEventListener('submit', verifyAdminPin);
+      document.getElementById('btn-lock-admin').addEventListener('click', lockAdminPortal);
+      document.getElementById('btn-save-announcement').addEventListener('click', saveAnnouncement);
+      document.getElementById('btn-clear-all-vents').addEventListener('click', clearAllVents);
+
+      document.getElementById('btn-open-helpline').addEventListener('click', openHelpModal);
+      document.getElementById('btn-close-helpline').addEventListener('click', closeHelpModal);
+      document.getElementById('btn-modal-done').addEventListener('click', closeHelpModal);
+    });
+  </script>
+</body>
+</html>
